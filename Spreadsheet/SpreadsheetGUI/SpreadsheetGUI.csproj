@@ -6,4 +6,9 @@
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SpreadsheetGridWidget\SpreadsheetGridWidget.csproj" />
+    <ProjectReference Include="..\Spreadsheet\Spreadsheet.csproj" />
+  </ItemGroup>
+
 </Project>

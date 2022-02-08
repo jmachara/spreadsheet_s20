@@ -676,60 +676,53 @@ namespace SS
         /// <param name="filename">name of the file</param>
         private void XmlReadFile(string filename)
         {
-            string errorMessage = "Error Reading the File";
+            // Try-Catch to catch any other exceptions to instead throw a SpreadsheetReadWriteException
             try
             {
+                // storage for cell info
+                string name = null;
+                string contents;
+                // Create an XmlReader inside this block, and automatically Dispose() it at the end.
                 using (XmlReader reader = XmlReader.Create(filename))
                 {
-                    reader.MoveToContent();
                     while (reader.Read())
                     {
-                        switch (reader.NodeType)
+                        if (reader.IsStartElement())
                         {
-                            case XmlNodeType.Element:
-                                if (reader.Name.Equals("cell"))
-                                {
-                                    while (reader.Read())
-                                    {
-                                        bool setCell = false;
-                                        switch (reader.NodeType)
-                                        {
-                                            case XmlNodeType.Element:
-                                                string cellName = reader.ReadElementContentAsString();
-                                                //reader.Read();
-                                                string cellContents = reader.ReadElementContentAsString();
-                                                setCell = true;
-                                                try
-                                                {
-                                                    SetContentsOfCell(cellName, cellContents);
-                                                }
-                                                catch (Exception)
-                                                {
-                                                    errorMessage = "Cell Contents or Name was Invalid";
-                                                    throw new Exception();
-                                                }
-                                                break;
-                                        }
-                                        if (setCell)
-                                        {
-                                            break;
-                                        }
+                            switch (reader.Name)
+                            {
+                                case "spreadsheet":
+                                    if (reader["version"] != this.Version)
+                                        throw new SpreadsheetReadWriteException("Version mismatch");
+                                    break;
 
-                                    }
-                                }
-                                break;
+                                case "cell":
+                                    if(reader.HasAttributes)
+                                        SetContentsOfCell(reader.GetAttribute(0), reader.GetAttribute(1));
+                                    break;
 
+                                case "name":
+                                    reader.Read();
+                                    name = reader.Value;
+                                    break;
+
+                                case "contents":
+                                    reader.Read();
+                                    contents = reader.Value;
+                                    SetContentsOfCell(name, contents);
+                                    break;
+
+                            }
                         }
-
                     }
-
                 }
             }
             catch (Exception)
             {
-                throw new SpreadsheetReadWriteException(errorMessage);
+                throw new SpreadsheetReadWriteException("Error while trying to read file");
             }
         }
+    
         /// <summary>
         /// checks if the cell contents are the same as the new contents
         /// </summary>
